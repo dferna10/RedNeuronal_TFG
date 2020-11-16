@@ -91,5 +91,7 @@ _Mención y ayuda para recordar los conocimientos y sitios donde de ha encontrad
 
 * [Crear dataset](https://machinelearningmastery.com/how-to-load-large-datasets-from-directories-for-deep-learning-with-keras/)- ImageDataGen
 
+* [CNN](https://towardsdatascience.com/visualizing-intermediate-activation-in-convolutional-neural-networks-with-keras-260b36d60d0) - Para ver pasos intermedios
+
 ## Documentación
 * [Libreria Keras](https://keras.io/api/) - Información sobre la librería
