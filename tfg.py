@@ -7,15 +7,15 @@ Con set de imagenes cargadas de poco en poco
 from keras import backend as K
 from keras import optimizers
 from keras.preprocessing.image import ImageDataGenerator
-from keras.utils import to_categorical
 from keras.models import Sequential
 from keras.models import load_model # Para cargar el modelo de nuestra red
 from keras.layers import Conv2D, MaxPooling2D
-from keras.layers import Dropout, Flatten, Dense, Activation
+from keras.layers import Dropout, Flatten, Dense
 
 # Importamos las librerias de actuacion contra el sistema
 import os
-import re
+
+import matplotlib.pyplot as plt
 
 
 '''
@@ -27,32 +27,35 @@ import re
 '''
 Funcion para crear el modelo de capas de nuestra red neuronal
 '''
-def createNeuralModel( n_categories, tam):
+def createNeuralModel( n_clases, tam):
+    
     model = Sequential()
-    #Creamos la capa convolucional
-    # Agregar parametros en el Conv2D
-    # input_shape( Dimensiones de la imagens, colores)
-    model.add(Conv2D(32, kernel_size=(3,3), activation="relu", input_shape=(tam['alto'], tam['ancho'], 3)))
+    
+    # Capa de entrada
+    # Creamos la capa convolucional
+    model.add(Conv2D(32, kernel_size = (3,3), activation = "relu", input_shape = (tam['alto'], tam['ancho'], 3)))
+    # Hacemos el pooling para recortar caracteristicas
+    model.add(MaxPooling2D((2, 2), padding = 'same'))
+    
+    # Capas intermedias 
+    model.add(Conv2D(64, kernel_size = (3,3), activation = "relu"))
     # Hacemos el pooling para recortar caracteristicas
     model.add(MaxPooling2D((2, 2),padding='same'))
     
-    model.add(Conv2D(64, kernel_size=(3,3), activation="relu"))
+    model.add(Conv2D(128, kernel_size = (3,3), activation = "sigmoid"))
     # Hacemos el pooling para recortar caracteristicas
-    model.add(MaxPooling2D((2, 2),padding='same'))
-    
-    model.add(Conv2D(128, kernel_size=(3,3), activation="sigmoid"))
-    # Hacemos el pooling para recortar caracteristicas
-    model.add(MaxPooling2D((2, 2),padding='same'))
+    model.add(MaxPooling2D((2, 2),padding = 'same'))
     
     # Quitamos dimensionalidad a la imagen
     model.add(Flatten())
     
-    model.add(Dense(256, activation="relu"))
-    # model.add(Dense(64, activation="relu"))
+    model.add(Dense(256, activation = "relu"))
+    
     # En cada iteracion desactivamos el 50% de las neuronas para darle varios caminos y poder  mejorar
     model.add(Dropout(0.5))
     
-    model.add(Dense(n_categories, activation='softmax'))
+    # Capa de salida
+    model.add(Dense(n_clases, activation = 'softmax'))
 
     return model
 
@@ -92,6 +95,29 @@ def create_directory(ruta):
 *******************************************************************
 '''
 
+'''
+Funcion para obtener los datos estadisticos del entrenamiento de nuestra red
+para asi saver donde mejorar
+Acurracy, loss
+'''
+def get_stats(modelo_entrenado):
+    accuracy = modelo_entrenado.history['accuracy']
+    val_accuracy = modelo_entrenado.history['val_accuracy']
+    loss = modelo_entrenado.history['loss']
+    val_loss = modelo_entrenado.history['val_loss']
+    epochs = range(len(accuracy))
+    plt.show()
+    print("\n")
+    plt.plot(epochs, accuracy, 'bo', label='Training accuracy')
+    plt.plot(epochs, val_accuracy, 'b', label='Validation accuracy')
+    plt.title('Training and validation accuracy')
+    plt.legend()
+    plt.figure()
+    plt.plot(epochs, loss, 'bo', label='Training loss')
+    plt.plot(epochs, val_loss, 'b', label='Validation loss')
+    plt.title('Training and validation loss')
+    plt.legend()
+    plt.show()
 
 '''
 Funcion para guardar la red convolucional ya entrenada
@@ -116,9 +142,10 @@ def train_cnn(rutas, tam):
     ruta_validacion = getImagesPath(rutas['validacion'])
     ruta_test = getImagesPath(rutas['test'])
     
-    clases = 2
+    # Numero de clases o etiquetas de nuestra red
+    clases = int(2)
     
-    #Creamos el modelo de nuestra red neuronal
+    # Creamos el modelo de nuestra red neuronal
     modelo  = createNeuralModel(clases, tam)
     
     # Generador de imagenes para que se carguen cuando se necesiten
@@ -128,26 +155,66 @@ def train_cnn(rutas, tam):
     batch_size = 32
     lr = 0.0004
     epochs = 20
-    steps = 1000
-    validation_steps = 300
+    # epochs = 1
+    # steps = 5
+    steps = 16
+    validation_steps = 8
     
-    #Creamos los sets de entrenamiento, validacion y test
-    entrenamiento = datagen.flow_from_directory(ruta_entrenamiento, target_size = (tam['alto'], tam['ancho']), class_mode = 'binary', batch_size = batch_size)
+    # Creamos los sets de entrenamiento, validacion y test
+    entrenamiento = datagen.flow_from_directory(ruta_entrenamiento, target_size = (tam['alto'], tam['ancho']), class_mode = 'categorical', batch_size = batch_size)
      
-    validacion = datagen.flow_from_directory(ruta_validacion,  target_size = (tam['alto'], tam['ancho']), class_mode = 'binary', batch_size = batch_size)
+    validacion = datagen.flow_from_directory(ruta_validacion,  target_size = (tam['alto'], tam['ancho']), class_mode = 'categorical', batch_size = batch_size)
     
-    test = datagen.flow_from_directory(ruta_test,  target_size = (tam['alto'], tam['ancho']), class_mode = 'binary', batch_size = batch_size)
+    test = datagen.flow_from_directory(ruta_test,  target_size = (tam['alto'], tam['ancho']), class_mode = 'categorical', batch_size = batch_size)
 
+
+    # Mostramos un resumen de nuestra red
+    modelo.summary()
+    
     # Compilamos la red
-    modelo.compile(loss='categorical_crossentropy', optimizer=optimizers.Adam(lr = lr), metrics=['accuracy'])
+    modelo.compile(loss = 'categorical_crossentropy', optimizer = optimizers.Adam(lr = lr), metrics = ['accuracy'])
     
+    # Entrenamos nuestra red
+    modelo_entrenado = modelo.fit_generator(entrenamiento, steps_per_epoch=steps, epochs = epochs, validation_data = validacion, validation_steps = validation_steps)
     
-    modelo.fit_generator(entrenamiento, steps_per_epoch = steps, epochs = epochs, validation_data = validacion, validation_steps = validation_steps)
+    print("\nEstadisticas de entrenamiento\n")
+    get_stats(modelo_entrenado)
     
     # Guaradamos el modelo de nuestra red ya entrenada
     save_cnn(modelo)
     
+    # Evaluamos nuestro modelo
+    print("\nEvaluamos nuestro modelo")
+    evaluacion = modelo.evaluate_generator(test, steps = 24)
+
+    print("\nEstadisticas de test\n")
+    print('Test loss:', evaluacion[0])
+    print('Test accuracy:', evaluacion[1])
+    # print("\nEstadisticas de test\n")
+    # get_stats(loss)
     
+    
+  
+'''
+********************************************************************
+* Funciones para la predicción de un nuevo elemento                *
+********************************************************************
+''' 
+  
+'''
+Funcion para cargar nuestra red para poder predecir resultados
+'''
+def load_cnn(ruta):
+    modelo_preentrenado = './' + ruta + '/tfg.h5'
+    pesos_modelo = './' + ruta + '/pesos.h5'
+    
+    modelo = None
+    
+    if(os.path.exists(modelo_preentrenado) and os.path.exists(pesos_modelo)):
+        modelo = load_model(modelo_preentrenado)
+        modelo.load_weights(pesos_modelo)
+    
+    return modelo  
 
 '''
 ********************************************************************
