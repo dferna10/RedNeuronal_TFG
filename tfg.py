@@ -10,7 +10,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.models import load_model # Para cargar el modelo de nuestra red
 from keras.layers import Conv2D, MaxPooling2D
-from keras.layers import Dropout, Flatten, Dense
+from keras.layers import Dropout, Flatten, Dense, Activation
 
 # Importamos las librerias de actuacion contra el sistema
 import os
@@ -33,23 +33,18 @@ def createNeuralModel( n_clases, tam):
     
     # Capa de entrada
     # Creamos la capa convolucional
-    model.add(Conv2D(32, kernel_size = (3,3), activation = "relu", input_shape = (tam['alto'], tam['ancho'], 3)))
+    model.add(Conv2D(32, kernel_size = (3,3), activation = "relu", input_shape = (tam['alto'], tam['ancho'], 3), padding = 'same'))
     # Hacemos el pooling para recortar caracteristicas
     model.add(MaxPooling2D((2, 2), padding = 'same'))
-    
+
     # Capas intermedias 
-    model.add(Conv2D(64, kernel_size = (3,3), activation = "relu"))
-    # Hacemos el pooling para recortar caracteristicas
-    model.add(MaxPooling2D((2, 2),padding='same'))
-    
-    model.add(Conv2D(128, kernel_size = (3,3), activation = "sigmoid"))
-    # Hacemos el pooling para recortar caracteristicas
+    model.add(Conv2D(64, kernel_size = (3,3), activation = "relu", padding = 'same'))
     model.add(MaxPooling2D((2, 2),padding = 'same'))
     
     # Quitamos dimensionalidad a la imagen
     model.add(Flatten())
-    
-    model.add(Dense(256, activation = "relu"))
+
+    model.add(Dense(64, activation = "relu"))
     
     # En cada iteracion desactivamos el 50% de las neuronas para darle varios caminos y poder  mejorar
     model.add(Dropout(0.5))
@@ -126,7 +121,7 @@ def save_cnn(modelo):
     print("\nGuardamos nuestro modelo")
     target_dir = create_directory("TFG/modelo")
     
-    #Guaradamos nuestra red entrenada
+    # Guaradamos nuestra red entrenada
     modelo.save(target_dir + 'tfg.h5')
     # Guaradamos los pesos de nuestra red entrenada
     modelo.save_weights(target_dir + 'pesos.h5')
@@ -149,15 +144,15 @@ def train_cnn(rutas, tam):
     modelo  = createNeuralModel(clases, tam)
     
     # Generador de imagenes para que se carguen cuando se necesiten
-    datagen = ImageDataGenerator()
+    datagen = ImageDataGenerator( rescale = 1. / 255)
     
     # Creamos las constantes de nuestra red
     batch_size = 32
     lr = 0.0004
-    epochs = 20
-    # epochs = 1
-    # steps = 5
-    steps = 16
+    #epochs = 20
+    epochs = 10
+    steps = 5
+    #steps = 16
     validation_steps = 8
     
     # Creamos los sets de entrenamiento, validacion y test
@@ -174,8 +169,11 @@ def train_cnn(rutas, tam):
     # Compilamos la red
     modelo.compile(loss = 'categorical_crossentropy', optimizer = optimizers.Adam(lr = lr), metrics = ['accuracy'])
     
+    
     # Entrenamos nuestra red
-    modelo_entrenado = modelo.fit_generator(entrenamiento, steps_per_epoch=steps, epochs = epochs, validation_data = validacion, validation_steps = validation_steps)
+    modelo_entrenado = modelo.fit_generator(entrenamiento, steps_per_epoch = steps, epochs = epochs, validation_data = validacion, validation_steps = validation_steps)
+    
+    print(modelo_entrenado.history.keys())
     
     print("\nEstadisticas de entrenamiento\n")
     get_stats(modelo_entrenado)
@@ -185,11 +183,11 @@ def train_cnn(rutas, tam):
     
     # Evaluamos nuestro modelo
     print("\nEvaluamos nuestro modelo")
-    evaluacion = modelo.evaluate_generator(test, steps = 24)
+    test_loss, test_accuracy = modelo.evaluate_generator(test, steps = 24)
 
     print("\nEstadisticas de test\n")
-    print('Test loss:', evaluacion[0])
-    print('Test accuracy:', evaluacion[1])
+    print('Test loss:', test_loss)
+    print('Test accuracy:', test_accuracy)
     # print("\nEstadisticas de test\n")
     # get_stats(loss)
     
@@ -237,8 +235,7 @@ Funcion principal de la red neuronal para crear el control
 '''
 def main():
     opcion = 1
-    
-    K.clear_session()
+
     
     # tamanho = {
     #     "ancho": 150,
@@ -250,6 +247,7 @@ def main():
     }
     
     if(opcion == 1):
+        K.clear_session()
         # Ruta de las imagenes sin procesar, de donde podemos extraer los directorios 
         # para obtener las etiquetas
         rutas = {

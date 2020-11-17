@@ -93,5 +93,7 @@ _Mención y ayuda para recordar los conocimientos y sitios donde de ha encontrad
 
 * [CNN](https://towardsdatascience.com/visualizing-intermediate-activation-in-convolutional-neural-networks-with-keras-260b36d60d0) - Para ver pasos intermedios
 
+* [Overfitting](https://torres.ai/datos-y-overfitting-keras-tensorflow/) - Pruebas de overfitting
+
 ## Documentación
 * [Libreria Keras](https://keras.io/api/) - Información sobre la librería
