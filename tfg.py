@@ -10,13 +10,14 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.models import load_model # Para cargar el modelo de nuestra red
 from keras.layers import Conv2D, MaxPooling2D
-from keras.layers import Dropout, Flatten, Dense, Activation
+from keras.layers import Dropout, Flatten, Dense
+from keras.preprocessing.image import load_img, img_to_array
 
 # Importamos las librerias de actuacion contra el sistema
 import os
+import numpy as np
 
 import matplotlib.pyplot as plt
-
 
 '''
 *******************************************************************
@@ -29,30 +30,36 @@ Funcion para crear el modelo de capas de nuestra red neuronal
 '''
 def createNeuralModel( n_clases, tam):
     
-    model = Sequential()
+    modelo = Sequential()
     
     # Capa de entrada
     # Creamos la capa convolucional
-    model.add(Conv2D(32, kernel_size = (3,3), activation = "relu", input_shape = (tam['alto'], tam['ancho'], 3), padding = 'same'))
+    modelo.add(Conv2D(32, kernel_size = (3,3), activation = "relu", input_shape = (tam['alto'], tam['ancho'], 3), padding = 'same'))
+    modelo.add(Dropout(0.6))
     # Hacemos el pooling para recortar caracteristicas
-    model.add(MaxPooling2D((2, 2), padding = 'same'))
+    modelo.add(MaxPooling2D((2, 2), padding = 'same'))
 
     # Capas intermedias 
-    model.add(Conv2D(64, kernel_size = (3,3), activation = "relu", padding = 'same'))
-    model.add(MaxPooling2D((2, 2),padding = 'same'))
+    modelo.add(Conv2D(64, kernel_size = (3,3), activation = "relu", padding = 'same'))
+    modelo.add(Dropout(0.6))
+    modelo.add(MaxPooling2D((2, 2),padding = 'same'))
+    
+    modelo.add(Conv2D(64, kernel_size = (3,3), activation = "relu", padding = 'same'))
+    modelo.add(Dropout(0.4))
+    modelo.add(MaxPooling2D((2, 2),padding = 'same'))
     
     # Quitamos dimensionalidad a la imagen
-    model.add(Flatten())
+    modelo.add(Flatten())
 
-    model.add(Dense(64, activation = "relu"))
+    modelo.add(Dense(128, activation = "relu"))
     
     # En cada iteracion desactivamos el 50% de las neuronas para darle varios caminos y poder  mejorar
-    model.add(Dropout(0.5))
+    modelo.add(Dropout(0.6))
     
     # Capa de salida
-    model.add(Dense(n_clases, activation = 'softmax'))
+    modelo.add(Dense(n_clases, activation = 'softmax'))
 
-    return model
+    return modelo
 
 
 '''
@@ -144,6 +151,11 @@ def train_cnn(rutas, tam):
     modelo  = createNeuralModel(clases, tam)
     
     # Generador de imagenes para que se carguen cuando se necesiten
+    entrena_datagen = ImageDataGenerator(
+        rescale = 1. / 255,
+        rotation_range = 5,
+        horizontal_flip = True)
+    
     datagen = ImageDataGenerator( rescale = 1. / 255)
     
     # Creamos las constantes de nuestra red
@@ -155,13 +167,10 @@ def train_cnn(rutas, tam):
     #steps = 16
     validation_steps = 8
     
-    # Creamos los sets de entrenamiento, validacion y test
-    entrenamiento = datagen.flow_from_directory(ruta_entrenamiento, target_size = (tam['alto'], tam['ancho']), class_mode = 'categorical', batch_size = batch_size)
+    # Creamos los sets de entrenamiento, validacion
+    entrenamiento = entrena_datagen.flow_from_directory(ruta_entrenamiento, target_size = (tam['alto'], tam['ancho']), class_mode = 'categorical', batch_size = batch_size)
      
     validacion = datagen.flow_from_directory(ruta_validacion,  target_size = (tam['alto'], tam['ancho']), class_mode = 'categorical', batch_size = batch_size)
-    
-    test = datagen.flow_from_directory(ruta_test,  target_size = (tam['alto'], tam['ancho']), class_mode = 'categorical', batch_size = batch_size)
-
 
     # Mostramos un resumen de nuestra red
     modelo.summary()
@@ -180,7 +189,10 @@ def train_cnn(rutas, tam):
     
     # Guaradamos el modelo de nuestra red ya entrenada
     save_cnn(modelo)
-    
+
+    # Cargamos las imágenes de test    
+    test = datagen.flow_from_directory(ruta_test,  target_size = (tam['alto'], tam['ancho']), class_mode = 'categorical', batch_size = batch_size)
+
     # Evaluamos nuestro modelo
     print("\nEvaluamos nuestro modelo")
     test_loss, test_accuracy = modelo.evaluate_generator(test, steps = 24)
@@ -214,6 +226,37 @@ def load_cnn(ruta):
     
     return modelo  
 
+
+'''
+Funcion para predecir un nuevo elemento 
+'''
+def predict_element(rutas, imagen, tam):
+    
+    modelo = load_cnn(rutas['modelo'])
+    
+    x = load_img(getImagesPath(rutas['prediccion']) +  imagen  , target_size = (tam['alto'], tam['ancho']))
+    
+    x = img_to_array(x)
+    
+    x = np.expand_dims(x, axis = 0)
+    
+    array = modelo.predict(x)
+    
+    salida = array[0]
+    
+    etiqueta = np.argmax(salida)
+    
+    if etiqueta == 0:
+      print("Predicción: Cruce")
+      
+    elif etiqueta == 1:
+      print("Predicción: Sin cruce")
+      
+    elif etiqueta == 2:
+      print("Predicción: Sin patron")
+      
+    return etiqueta
+
 '''
 ********************************************************************
 * Funcion principal del la red neuronal para nuestro mayor control *
@@ -236,11 +279,6 @@ Funcion principal de la red neuronal para crear el control
 def main():
     opcion = 1
 
-    
-    # tamanho = {
-    #     "ancho": 150,
-    #     "alto": 100
-    # }
     tamanho = {
         "ancho": 400,
         "alto": 300
@@ -260,11 +298,16 @@ def main():
         train_cnn(rutas, tamanho) 
 
     elif(opcion == 2):
-        imagen = "DJI_0021.JPG"
-#         imagen = "camion.png"
-        ruta_modelo = "TFG/modelo"
-        ruta_prediccion = "TFG/test"
+        # imagen = "DJJ_172.JPG"
+        imagen = "DJJ_1583.JPG"
         
+        rutas = {
+            'modelo': "TFG/modelo",
+            "prediccion": "TFG/prediccion"
+        }
+        
+        valor = predict_element(rutas, imagen, tamanho)
+        print(valor)
         # valor = clasify_element(ruta_modelo, ruta_prediccion, ruta_origen, imagen, tamanho)
         # if(valor == -1):
         #     print("ERROR: No se encuentran los archivos de entrenamiento de la red")
