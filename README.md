@@ -95,5 +95,7 @@ _Mención y ayuda para recordar los conocimientos y sitios donde de ha encontrad
 
 * [Overfitting](https://torres.ai/datos-y-overfitting-keras-tensorflow/) - Pruebas de overfitting
 
+* [Ejemplo reconocimiento](https://medium.com/metadatos/gu%C3%ADa-r%C3%A1pida-sobre-preprocesamiento-de-im%C3%A1genes-faciales-para-redes-neuronales-usando-opencv-en-c68599ca08dd)- opencv
+
 ## Documentación
 * [Libreria Keras](https://keras.io/api/) - Información sobre la librería
