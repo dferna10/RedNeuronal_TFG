@@ -61,6 +61,21 @@ Nos deberia de sacar por pantalla
 **Using TensorFlow backend**
 
 
+# Solucion de errores
+Al darnos un problema de **overffitting** porque tenemos imágenes muy similares la red no aprendia a generalizar, sino que memorizaba,
+los resultados que podiamos obtener. Por lo que si entraba una imágenes posterior o anterior a las que entrasen en entrenamiento, 
+esa la reconocia bien, pero si era diferente nos falla.
+Para solucionar este error hemos colocado la siguiente linea, para que modifique la imagen, la invierta horizontalmente, la reescale, o la gire.
+
+```
+entrena_datagen = ImageDataGenerator(
+    rescale = 1. / 255,
+    rotation_range = 5,
+    horizontal_flip = True
+)   
+```
+
+
 # Acrónimos📋
 * **CNN**: Redes Neuronales Convolucionales ( Convolutional Neural Network)
 
