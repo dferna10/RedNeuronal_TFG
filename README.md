@@ -112,5 +112,7 @@ _Mención y ayuda para recordar los conocimientos y sitios donde de ha encontrad
 
 * [Ejemplo reconocimiento](https://medium.com/metadatos/gu%C3%ADa-r%C3%A1pida-sobre-preprocesamiento-de-im%C3%A1genes-faciales-para-redes-neuronales-usando-opencv-en-c68599ca08dd)- opencv
 
+* [Mejoras del modelo](https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html) - Pruebas de nuevos modelos
+
 ## Documentación
 * [Libreria Keras](https://keras.io/api/) - Información sobre la librería
