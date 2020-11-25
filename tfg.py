@@ -12,12 +12,14 @@ from keras.models import load_model # Para cargar el modelo de nuestra red
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Dropout, Flatten, Dense
 from keras.preprocessing.image import load_img, img_to_array
+# from keras.callbacks import ModelCheckpoint #Para coger el mejor resultado de todas las epocas
 
 # Importamos las librerias de actuacion contra el sistema
 import os
 import numpy as np
 
 import matplotlib.pyplot as plt
+
 
 '''
 *******************************************************************
@@ -34,24 +36,22 @@ def createNeuralModel( n_clases, tam):
     
     # Capa de entrada
     # Creamos la capa convolucional
-    modelo.add(Conv2D(32, kernel_size = (3,3), activation = "relu", input_shape = (tam['alto'], tam['ancho'], 3), padding = 'same'))
-    modelo.add(Dropout(0.6))
+    modelo.add(Conv2D(32, kernel_size = (3, 3), activation = "relu", input_shape = (tam['alto'], tam['ancho'], 3), padding = 'same'))
+    # modelo.add(Conv2D(32, kernel_size = (3,3), activation = "relu", padding = 'same'))
     # Hacemos el pooling para recortar caracteristicas
     modelo.add(MaxPooling2D((2, 2), padding = 'same'))
+    # modelo.add(Dropout(0.5))
 
     # Capas intermedias 
-    modelo.add(Conv2D(64, kernel_size = (3,3), activation = "relu", padding = 'same'))
-    modelo.add(Dropout(0.6))
+    modelo.add(Conv2D(64, kernel_size = (3, 3), padding = 'same'))
+    # modelo.add(Conv2D(64, kernel_size = (3, 3), activation = "relu", padding = 'same'))
     modelo.add(MaxPooling2D((2, 2),padding = 'same'))
-    
-    modelo.add(Conv2D(64, kernel_size = (3,3), activation = "relu", padding = 'same'))
-    modelo.add(Dropout(0.4))
-    modelo.add(MaxPooling2D((2, 2),padding = 'same'))
+    modelo.add(Dropout(0.5))
     
     # Quitamos dimensionalidad a la imagen
     modelo.add(Flatten())
 
-    modelo.add(Dense(128, activation = "relu"))
+    modelo.add(Dense(64, activation = "relu"))
     
     # En cada iteracion desactivamos el 50% de las neuronas para darle varios caminos y poder  mejorar
     modelo.add(Dropout(0.6))
@@ -154,18 +154,20 @@ def train_cnn(rutas, tam):
     entrena_datagen = ImageDataGenerator(
         rescale = 1. / 255,
         rotation_range = 5,
-        horizontal_flip = True)
+        horizontal_flip = True,
+        vertical_flip = True
+    )
     
     datagen = ImageDataGenerator( rescale = 1. / 255)
     
     # Creamos las constantes de nuestra red
     batch_size = 32
     lr = 0.0004
-    #epochs = 20
+    # epochs = 20
+    steps = 16
     epochs = 10
-    steps = 5
-    #steps = 16
-    validation_steps = 8
+    # steps = 5
+    validation_steps = 300
     
     # Creamos los sets de entrenamiento, validacion
     entrenamiento = entrena_datagen.flow_from_directory(ruta_entrenamiento, target_size = (tam['alto'], tam['ancho']), class_mode = 'categorical', batch_size = batch_size)
@@ -177,14 +179,17 @@ def train_cnn(rutas, tam):
     
     # Compilamos la red
     modelo.compile(loss = 'categorical_crossentropy', optimizer = optimizers.Adam(lr = lr), metrics = ['accuracy'])
-    
+   
+    # directorio = create_directory(rutas['modelo'])
+    #Creamos los checkpoints para que nos coja la mejor iteracion
+    # checkpoints = ModelCheckpoint(filepath = directorio + "mejores_pesos.hdf5", monitor = 'val_accuracy', verbose = 1, save_best_only = True)
     
     # Entrenamos nuestra red
-    modelo_entrenado = modelo.fit_generator(entrenamiento, steps_per_epoch = steps, epochs = epochs, validation_data = validacion, validation_steps = validation_steps)
+    modelo_entrenado = modelo.fit_generator(entrenamiento,
+                                            # callbacks = [checkpoints],
+                                            steps_per_epoch = steps, epochs = epochs, validation_data = validacion, validation_steps = validation_steps)
     
-    print(modelo_entrenado.history.keys())
-    
-    print("\nEstadisticas de entrenamiento\n")
+    print("\nEstadisticas de entrenamiento")
     get_stats(modelo_entrenado)
     
     # Guaradamos el modelo de nuestra red ya entrenada
@@ -216,6 +221,7 @@ Funcion para cargar nuestra red para poder predecir resultados
 '''
 def load_cnn(ruta):
     modelo_preentrenado = './' + ruta + '/tfg.h5'
+    # pesos_modelo = './' + ruta + '/mejores_pesos.hdf5'
     pesos_modelo = './' + ruta + '/pesos.h5'
     
     modelo = None
@@ -240,9 +246,13 @@ def predict_element(rutas, imagen, tam):
     
     x = np.expand_dims(x, axis = 0)
     
-    array = modelo.predict(x)
+    prediccion = modelo.predict(x)
     
-    salida = array[0]
+    print(prediccion)
+    
+    salida = prediccion[0]
+    
+    print(salida)
     
     etiqueta = np.argmax(salida)
     
@@ -291,14 +301,17 @@ def main():
         rutas = {
             'entrenamiento': "TFG/entrenamiento",
             'validacion': "TFG/validacion",
-            'test': "TFG/test"
+            'test': "TFG/test",
+            'modelo': "TFG/modelo",
         }
         
         # Entrenamos nuestra red
         train_cnn(rutas, tamanho) 
 
     elif(opcion == 2):
-        # imagen = "DJJ_172.JPG"
+        # Con cruce
+        # imagen = "DJJ_172.JPG" 
+        # Sin cruce
         imagen = "DJJ_1583.JPG"
         
         rutas = {
