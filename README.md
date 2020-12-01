@@ -114,5 +114,7 @@ _Mención y ayuda para recordar los conocimientos y sitios donde de ha encontrad
 
 * [Mejoras del modelo](https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html) - Pruebas de nuevos modelos
 
+* [Visualizar ](https://academica-e.unavarra.es/bitstream/handle/2454/33694/memoria_TFG.pdf?sequence=1&isAllowed=y)- CNN
+* [Libreos CNN](https://developers.google.com/machine-learning/practica/image-classification/next-steps?hl=es)
 ## Documentación
 * [Libreria Keras](https://keras.io/api/) - Información sobre la librería
