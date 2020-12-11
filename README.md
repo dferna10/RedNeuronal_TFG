@@ -45,6 +45,7 @@ Este proyecto va ser una reconocimeinto de imágenes procesadas con Deep Learnin
 * Introducimos el siguiente comando 
 
 ```
+conda install -c anaconda tensorflow
 conda install -c conda-forge keras
 ```
 
@@ -61,6 +62,13 @@ Nos deberia de sacar por pantalla
 **Using TensorFlow backend**
 
 
+# Instalación de TensorFlow para GPU
+``` 
+pip install tensorflow
+
+```
+
+
 # Solucion de errores
 Al darnos un problema de **overffitting** porque tenemos imágenes muy similares la red no aprendia a generalizar, sino que memorizaba,
 los resultados que podiamos obtener. Por lo que si entraba una imágenes posterior o anterior a las que entrasen en entrenamiento, 
@@ -75,6 +83,11 @@ entrena_datagen = ImageDataGenerator(
 )   
 ```
 
+# Instalacion de librerias para GPU
+Para instalar estas librerias desde la terminal de anaconda como administrador
+``` 
+conda install numba & conda install cudatoolkit
+```
 
 # Acrónimos📋
 * **CNN**: Redes Neuronales Convolucionales ( Convolutional Neural Network)
@@ -116,5 +129,14 @@ _Mención y ayuda para recordar los conocimientos y sitios donde de ha encontrad
 
 * [Visualizar ](https://academica-e.unavarra.es/bitstream/handle/2454/33694/memoria_TFG.pdf?sequence=1&isAllowed=y)- CNN
 * [Libreos CNN](https://developers.google.com/machine-learning/practica/image-classification/next-steps?hl=es)
+
+* [Video IA](https://www.youtube.com/watch?v=qFJeN9V1ZsI) - 3Horas
+
+* [GPU](https://www.geeksforgeeks.org/running-python-script-on-gpu/) - Intento instalar gpu
+
+* [NUMBA](https://numba.pydata.org/numba-doc/latest/cuda/kernels.html#kernel-invocation) -Libreria de numba
+
+* [TensorFlow](https://www.tensorflow.org/install/pip?hl=es-419#conda) - Libreria de TensorFlow
+
 ## Documentación
 * [Libreria Keras](https://keras.io/api/) - Información sobre la librería
