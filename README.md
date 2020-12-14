@@ -138,5 +138,7 @@ _Mención y ayuda para recordar los conocimientos y sitios donde de ha encontrad
 
 * [TensorFlow](https://www.tensorflow.org/install/pip?hl=es-419#conda) - Libreria de TensorFlow
 
+* [Video GPU](https://github.com/rohanchopra/kerai-labs/blob/master/Getting%20Started.ipynb)- Instalar cuda en UBUNTU
+
 ## Documentación
 * [Libreria Keras](https://keras.io/api/) - Información sobre la librería

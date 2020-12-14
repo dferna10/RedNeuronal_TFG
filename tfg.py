@@ -40,7 +40,7 @@ def createNeuralModel( n_clases, tam):
     # Capa de entrada
     # Creamos la capa convolucional
     modelo.add(Conv2D(32, kernel_size = (3, 3), activation = "relu", padding='same', input_shape = (tam['alto'], tam['ancho'], 3)))
-    modelo.add(BatchNormalization())
+    # modelo.add(BatchNormalization())
     # modelo.add(Conv2D(64, kernel_size = (3, 3), activation = "relu"))
     # Hacemos el pooling para recortar caracteristicas
     modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2 ))
@@ -89,9 +89,7 @@ Funcion para obtener la ruta de las imagenes
 def getImagesPath(ruta):
     dirname = os.path.join(os.getcwd(), ruta)
     
-    images_path = dirname + os.sep 
-    
-    return images_path
+    return dirname + os.sep 
 
 '''
 Funcion para crear el directorio, si no existe
@@ -187,14 +185,14 @@ def imgSee(iterator):
 Funcion principal para el entrenamiento de la red neuronal 
 convoluciona (CNN)
 '''
-@cuda.jit
+@jit
 # @cuda.jit(device=True)
 def train_cnn(rutas, tam):
     
     # Generamos las rutas
-    ruta_entrenamiento = getImagesPath(rutas['entrenamiento'])
-    ruta_validacion = getImagesPath(rutas['validacion'])
-    ruta_test = getImagesPath(rutas['test'])
+    ruta_entrenamiento = rutas['entrenamiento']
+    ruta_validacion = rutas['validacion']
+    ruta_test = rutas['test']
     
     # Numero de clases o etiquetas de nuestra red
     clases = int(2)
@@ -212,6 +210,7 @@ def train_cnn(rutas, tam):
     
     datagen = ImageDataGenerator( rescale = 1. / 255)
     
+    
     # Creamos las constantes de nuestra red
     batch_size = 64
     lr = 0.0001
@@ -219,15 +218,6 @@ def train_cnn(rutas, tam):
     steps = 16
     epochs = 10
     # steps = 5
-    validation_steps = 50
-    
-    # Mostramos un resumen de nuestra red
-    modelo.summary()
-    
-    # Compilamos la red
-    modelo.compile(loss = 'categorical_crossentropy', 
-                   optimizer = optimizers.Adam(learning_rate = lr), 
-                   metrics = ['accuracy'])
     
     print("\n")
     # Creamos los sets de entrenamiento, validacion
@@ -241,6 +231,18 @@ def train_cnn(rutas, tam):
                                              target_size = (tam['alto'], tam['ancho']),
                                              class_mode = 'categorical',
                                              batch_size = batch_size)
+
+    validation_steps = len(validacion)
+    
+    # Mostramos un resumen de nuestra red
+    modelo.summary()
+    
+    # Compilamos la red
+    modelo.compile(loss = 'categorical_crossentropy', 
+                   optimizer = optimizers.Adam(learning_rate = lr), 
+                   metrics = ['accuracy'])
+    
+
 
     print("\n")
    
@@ -365,7 +367,7 @@ def show_menu():
 Funcion principal de la red neuronal para crear el control
 '''
 def main():
-    opcion = 1
+    opcion = 2
 
     tamanho = {
         "ancho": 150,
@@ -378,10 +380,10 @@ def main():
         # Ruta de las imagenes sin procesar, de donde podemos extraer los directorios 
         # para obtener las etiquetas
         rutas = {
-            'entrenamiento': "TFG/entrenamiento",
-            'validacion': "TFG/validacion",
-            'test': "TFG/test",
-            'modelo': "TFG/modelo",
+            'entrenamiento': getImagesPath("TFG/entrenamiento"),
+            'validacion': getImagesPath("TFG/validacion"),
+            'test': getImagesPath("TFG/test"),
+            'modelo': getImagesPath("TFG/modelo"),
         }
         
         # Entrenamos nuestra red
@@ -411,10 +413,10 @@ def main():
         show_menu()
         return -1
 
-# import tensorflow as tf
-# print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+import tensorflow as tf
+print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 
-# print("Num GPUs Available: ", list(tf.config.experimental.list_physical_devices()))
+print("Num GPUs Available: ", list(tf.config.experimental.list_physical_devices()))
 
 main()    
         
