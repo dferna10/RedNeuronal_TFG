@@ -41,7 +41,6 @@ def createNeuralModel( n_clases, tam):
     # Creamos la capa convolucional
     modelo.add(Conv2D(32, kernel_size = (3, 3), activation = "relu", padding='same', input_shape = (tam['alto'], tam['ancho'], 3)))
     # modelo.add(BatchNormalization())
-    # modelo.add(Conv2D(64, kernel_size = (3, 3), activation = "relu"))
     # Hacemos el pooling para recortar caracteristicas
     modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2 ))
 
@@ -52,11 +51,10 @@ def createNeuralModel( n_clases, tam):
     
     
     modelo.add(Conv2D(128, kernel_size = (3, 3), activation = "relu"))
-    # modelo.add(BatchNormalization())
+    modelo.add(BatchNormalization())
     modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2 ))
     
     # modelo.add(Conv2D(256, kernel_size = (3, 3)))
-    # # modelo.add(BatchNormalization())
     # modelo.add(MaxPooling2D((2, 2)))
     
     # Quitamos dimensionalidad a la imagen
@@ -185,8 +183,7 @@ def imgSee(iterator):
 Funcion principal para el entrenamiento de la red neuronal 
 convoluciona (CNN)
 '''
-@jit
-# @cuda.jit(device=True)
+# @jit( target='cuda')
 def train_cnn(rutas, tam):
     
     # Generamos las rutas
@@ -219,6 +216,14 @@ def train_cnn(rutas, tam):
     epochs = 10
     # steps = 5
     
+    # Mostramos un resumen de nuestra red
+    modelo.summary()
+    
+    # Compilamos la red
+    modelo.compile(loss = 'categorical_crossentropy', 
+                   optimizer = optimizers.Adam(learning_rate = lr), 
+                   metrics = ['accuracy'])
+    
     print("\n")
     # Creamos los sets de entrenamiento, validacion
     entrenamiento = entrena_datagen.flow_from_directory(directory = ruta_entrenamiento,
@@ -234,15 +239,7 @@ def train_cnn(rutas, tam):
 
     validation_steps = len(validacion)
     
-    # Mostramos un resumen de nuestra red
-    modelo.summary()
-    
-    # Compilamos la red
-    modelo.compile(loss = 'categorical_crossentropy', 
-                   optimizer = optimizers.Adam(learning_rate = lr), 
-                   metrics = ['accuracy'])
-    
-
+    print(validation_steps)
 
     print("\n")
    
@@ -297,9 +294,9 @@ def train_cnn(rutas, tam):
 Funcion para cargar nuestra red para poder predecir resultados
 '''
 def load_cnn(ruta):
-    modelo_preentrenado = './' + ruta + '/tfg.h5'
+    modelo_preentrenado = ruta + '/tfg.h5'
     # pesos_modelo = './' + ruta + '/mejores_pesos.hdf5'
-    pesos_modelo = './' + ruta + '/pesos.h5'
+    pesos_modelo = ruta + '/pesos.h5'
     
     modelo = None
     
@@ -318,7 +315,7 @@ def predict_element(rutas, imagen, tam):
     modelo = load_cnn(rutas['modelo'])
     
     if(modelo != None):
-        imagen = load_img(getImagesPath(rutas['prediccion']) +  imagen  , target_size = (tam['alto'], tam['ancho']))
+        imagen = load_img(rutas['prediccion'] +  imagen  , target_size = (tam['alto'], tam['ancho']))
         imagen = img_to_array(imagen)
   
         imagen = np.expand_dims(imagen, axis = 0)
@@ -367,7 +364,7 @@ def show_menu():
 Funcion principal de la red neuronal para crear el control
 '''
 def main():
-    opcion = 2
+    opcion = 1
 
     tamanho = {
         "ancho": 150,
@@ -396,8 +393,8 @@ def main():
         imagen = "DJJ_1583.JPG"
         
         rutas = {
-            'modelo': "TFG/modelo",
-            "prediccion": "TFG/prediccion"
+            'modelo':  getImagesPath("TFG/modelo"),
+            "prediccion":  getImagesPath("TFG/prediccion")
         }
         
         valor = predict_element(rutas, imagen, tamanho)
@@ -413,17 +410,18 @@ def main():
         show_menu()
         return -1
 
-import tensorflow as tf
-print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+# import tensorflow as tf
+# # print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 
-print("Num GPUs Available: ", list(tf.config.experimental.list_physical_devices()))
+# print("Num GPUs Available: ", list(tf.config.experimental.list_physical_devices()))
 
-main()    
+# if __name__=='__main__':
+main()  
         
 #Para ver las GPU o dispositivos que tenemos
 # import tensorflow as tf
 # dispositivos = tf.config.experimental.list_physical_devices('GPU')
 
 # print("Numero de GPU " +str(len(dispositivos)))
-
-
+# from tensorflow.python.client import device_lib
+# print(device_lib.list_local_devices())

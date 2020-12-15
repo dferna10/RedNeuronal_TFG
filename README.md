@@ -89,6 +89,12 @@ Para instalar estas librerias desde la terminal de anaconda como administrador
 conda install numba & conda install cudatoolkit
 ```
 
+# Crear entornos de desarrollo
+Ejecutamos en terminal
+```
+conda create --name nombreAmbiente
+```
+
 # Acrónimos📋
 * **CNN**: Redes Neuronales Convolucionales ( Convolutional Neural Network)
 
