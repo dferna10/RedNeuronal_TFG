@@ -146,5 +146,9 @@ _Mención y ayuda para recordar los conocimientos y sitios donde de ha encontrad
 
 * [Video GPU](https://github.com/rohanchopra/kerai-labs/blob/master/Getting%20Started.ipynb)- Instalar cuda en UBUNTU
 
+* [Explicación CNN](https://inteligencia.tech/2018/06/06/redes-convolutivas-en-inteligencia-artificial/)- AMP-TECH
+
+* [Web IA](https://inteligencia.tech/)
+
 ## Documentación
 * [Libreria Keras](https://keras.io/api/) - Información sobre la librería

@@ -21,8 +21,8 @@ import matplotlib.pyplot as plt
 
 import time
 
-from numba import cuda
-from numba import jit
+# from numba import cuda
+# from numba import jit
 
 '''
 *******************************************************************
@@ -40,13 +40,12 @@ def createNeuralModel( n_clases, tam):
     # Capa de entrada
     # Creamos la capa convolucional
     modelo.add(Conv2D(32, kernel_size = (3, 3), activation = "relu", padding='same', input_shape = (tam['alto'], tam['ancho'], 3)))
-    # modelo.add(BatchNormalization())
+    modelo.add(BatchNormalization())
     # Hacemos el pooling para recortar caracteristicas
     modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2 ))
 
     # Capas intermedias 
     modelo.add(Conv2D(64, kernel_size = (3, 3), activation = "relu"))
-    # modelo.add(BatchNormalization())
     modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2))
     
     
@@ -54,20 +53,18 @@ def createNeuralModel( n_clases, tam):
     modelo.add(BatchNormalization())
     modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2 ))
     
-    # modelo.add(Conv2D(256, kernel_size = (3, 3)))
-    # modelo.add(MaxPooling2D((2, 2)))
+    modelo.add(Conv2D(128, kernel_size = (3, 3)))
+    modelo.add(MaxPooling2D((2, 2)))
+    
+    modelo.add(Conv2D(128, kernel_size = (3, 3)))
+    modelo.add(MaxPooling2D((2, 2)))
     
     # Quitamos dimensionalidad a la imagen
     modelo.add(Flatten())
 
     modelo.add(Dense(1024, activation = "relu"))
-    modelo.add(Dropout(0.5))  # En cada iteracion desactivamos el 50% de las neuronas para darle varios caminos y poder  mejorar
-    
-    modelo.add(Dense(512, activation = "relu"))
-    modelo.add(Dropout(0.5))
-    
-    modelo.add(Dense(256, activation = "relu"))
-    modelo.add(Dropout(0.5))
+    # En cada iteracion desactivamos el 50% de las neuronas para darle varios caminos y poder  mejorar
+    modelo.add(Dropout(0.5)) 
     
     # Capa de salida
     modelo.add(Dense(n_clases, activation = 'softmax'))
@@ -135,6 +132,41 @@ def get_stats(modelo_entrenado):
     plt.legend()
     plt.show()
 
+
+'''
+Funcion para imprimir la grafica cuando solo entrenamos sin validacion
+'''
+def getSimplyStats(modelo_entrenado):
+    accuracy = modelo_entrenado.history['accuracy']
+    loss = modelo_entrenado.history['loss']
+    
+    epochs = range(len(accuracy))
+    plt.show()
+    
+    print("\n")
+    
+    plt.plot(epochs, accuracy, color = 'b', label = 'Accuracy')
+    plt.plot(epochs, loss, color = "r", label='Loss')
+    plt.title('Acuraccy y loss entrenamiento')
+    plt.legend()
+    plt.show()
+
+'''
+Funcion para registrar los resultados obtenidos al entrenar nuestra red
+'''
+def write_simply_log(epochs, accuracy,loss, loss_test, accuracy_test):
+    actual = time.strftime("%c")
+    f = open ("train_log.txt", "a")
+    cadena = "\n" + actual
+    cadena = cadena + "\nNúmero de epocas: " + str(epochs)
+    cadena = cadena + "\nAccuracy: " + str(list(accuracy))
+    cadena = cadena + "\nLoss : " + str(list(loss))
+    cadena = cadena + "\nAccuracy Test : " + str(accuracy_test)
+    cadena = cadena + "\nLoss test : " + str(loss_test)
+    cadena = cadena + "\n"
+    f.write(cadena)
+    f.close()
+
 '''
 Funcion para registrar los resultados obtenidos al entrenar nuestra red
 '''
@@ -165,20 +197,6 @@ def save_cnn(modelo, ruta):
     # Guaradamos los pesos de nuestra red entrenada
     modelo.save_weights(target_dir + 'pesos.h5')
 
-def imgSee(iterator):
-    imgs, labels = next(iterator)
-    print(len(imgs))
-    fig, axes = plt.subplots(1, 10, figsize=(20, 20))
-    axes = axes.flatten()
-    
-    for img, ax in zip(imgs, axes):
-        ax.imshow(img)
-        ax.axis("off")
-    plt.tight_layout()
-    plt.show()
-    
-    print(labels[:10])
-
 '''
 Funcion principal para el entrenamiento de la red neuronal 
 convoluciona (CNN)
@@ -188,7 +206,7 @@ def train_cnn(rutas, tam):
     
     # Generamos las rutas
     ruta_entrenamiento = rutas['entrenamiento']
-    ruta_validacion = rutas['validacion']
+    # ruta_validacion = rutas['validacion']
     ruta_test = rutas['test']
     
     # Numero de clases o etiquetas de nuestra red
@@ -211,10 +229,9 @@ def train_cnn(rutas, tam):
     # Creamos las constantes de nuestra red
     batch_size = 64
     lr = 0.0001
-    # epochs = 20
+    epochs = 150
     steps = 16
-    epochs = 10
-    # steps = 5
+    # validation_steps = 350
     
     # Mostramos un resumen de nuestra red
     modelo.summary()
@@ -230,16 +247,11 @@ def train_cnn(rutas, tam):
                                                         target_size = (tam['alto'], tam['ancho']),
                                                         class_mode = 'categorical',
                                                         batch_size = batch_size)
-    # imgSee(entrenamiento) 
     
-    validacion = datagen.flow_from_directory(directory = ruta_validacion,
-                                             target_size = (tam['alto'], tam['ancho']),
-                                             class_mode = 'categorical',
-                                             batch_size = batch_size)
-
-    validation_steps = len(validacion)
-    
-    print(validation_steps)
+    # validacion = datagen.flow_from_directory(directory = ruta_validacion,
+                                             # target_size = (tam['alto'], tam['ancho']),
+                                             # class_mode = 'categorical',
+                                             # batch_size = batch_size)
 
     print("\n")
    
@@ -252,11 +264,13 @@ def train_cnn(rutas, tam):
                                   # callbacks = [checkpoints],
                                   steps_per_epoch = steps, 
                                   epochs = epochs, 
-                                  validation_data = validacion, 
-                                  validation_steps = validation_steps)
+                                  # validation_data = validacion, 
+                                  # validation_steps = validation_steps
+                                  )
     
     print("\nEstadisticas de entrenamiento")
-    get_stats(modelo_entrenado)
+    getSimplyStats(modelo_entrenado)
+    # get_stats(modelo_entrenado)
     
     # Guaradamos el modelo de nuestra red ya entrenada
     save_cnn(modelo, rutas["modelo"])
@@ -278,9 +292,11 @@ def train_cnn(rutas, tam):
     
     historico = modelo_entrenado.history
     
-    write_log(epochs, historico['accuracy'] , historico['val_accuracy'],
-              historico['loss'] , historico['val_loss'],
-              test_loss, test_accuracy)
+    write_log(epochs, historico['accuracy'], historico['loss'],test_loss, test_accuracy)
+    
+    # write_log(epochs, historico['accuracy'] , historico['val_accuracy'],
+              # historico['loss'] , historico['val_loss'],
+              # test_loss, test_accuracy)
   
     
   
@@ -294,9 +310,9 @@ def train_cnn(rutas, tam):
 Funcion para cargar nuestra red para poder predecir resultados
 '''
 def load_cnn(ruta):
-    modelo_preentrenado = ruta + '/tfg.h5'
+    modelo_preentrenado = ruta + 'tfg.h5'
     # pesos_modelo = './' + ruta + '/mejores_pesos.hdf5'
-    pesos_modelo = ruta + '/pesos.h5'
+    pesos_modelo = ruta + 'pesos.h5'
     
     modelo = None
     
@@ -306,7 +322,6 @@ def load_cnn(ruta):
     
     return modelo  
 
-
 '''
 Funcion para predecir un nuevo elemento 
 '''
@@ -315,12 +330,13 @@ def predict_element(rutas, imagen, tam):
     modelo = load_cnn(rutas['modelo'])
     
     if(modelo != None):
-        imagen = load_img(rutas['prediccion'] +  imagen  , target_size = (tam['alto'], tam['ancho']))
-        imagen = img_to_array(imagen)
-  
-        imagen = np.expand_dims(imagen, axis = 0)
+        imagen_test = load_img(rutas['prediccion'] +  imagen, target_size = (tam['alto'], tam['ancho']))
+        imagen_test = img_to_array(imagen_test) 
+        # imagen_test = imagen_test / 255.
+        imagen_test = np.expand_dims(imagen_test, axis = 0)
         
-        prediccion = modelo.predict(imagen)
+        print(imagen_test.shape)
+        prediccion = modelo.predict(imagen_test)
   
         print(prediccion)
   
@@ -379,7 +395,7 @@ def main():
         rutas = {
             'entrenamiento': getImagesPath("TFG/entrenamiento"),
             'validacion': getImagesPath("TFG/validacion"),
-            'test': getImagesPath("TFG/test"),
+            'test': getImagesPath("TFG/test_2"),
             'modelo': getImagesPath("TFG/modelo"),
         }
         
@@ -388,9 +404,13 @@ def main():
 
     elif(opcion == 2):
         # Con cruce
-        # imagen = "DJJ_172.JPG" 
+        imagen = "DJJ_172.JPG" 
         # Sin cruce
-        imagen = "DJJ_1583.JPG"
+        # imagen = "DJJ_1583.JPG"
+        # imagen = "DJJ_408.JPG"
+        
+        #Otra imagen
+        # imagen = "header.jpg"
         
         rutas = {
             'modelo':  getImagesPath("TFG/modelo"),
