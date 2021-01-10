@@ -38,25 +38,22 @@ def createNeuralModel( n_clases, tam):
     modelo = Sequential()
     
     # Capa de entrada
-    # Creamos la capa convolucional
     modelo.add(Conv2D(32, kernel_size = (3, 3), activation = "relu", padding='same', input_shape = (tam['alto'], tam['ancho'], 3)))
     modelo.add(BatchNormalization())
-    # Hacemos el pooling para recortar caracteristicas
     modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2 ))
 
     # Capas intermedias 
     modelo.add(Conv2D(64, kernel_size = (3, 3), activation = "relu"))
     modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2))
     
-    
     modelo.add(Conv2D(128, kernel_size = (3, 3), activation = "relu"))
     modelo.add(BatchNormalization())
     modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2 ))
     
-    modelo.add(Conv2D(128, kernel_size = (3, 3)))
+    modelo.add(Conv2D(128, kernel_size = (3, 3),  activation = "relu"))
     modelo.add(MaxPooling2D((2, 2)))
     
-    modelo.add(Conv2D(128, kernel_size = (3, 3)))
+    modelo.add(Conv2D(128, kernel_size = (3, 3),  activation = "relu"))
     modelo.add(MaxPooling2D((2, 2)))
     
     # Quitamos dimensionalidad a la imagen
@@ -70,7 +67,6 @@ def createNeuralModel( n_clases, tam):
     modelo.add(Dense(n_clases, activation = 'softmax'))
     
     return modelo
-
 
 '''
 *******************************************************************
@@ -229,7 +225,7 @@ def train_cnn(rutas, tam):
     # Creamos las constantes de nuestra red
     batch_size = 64
     lr = 0.0001
-    epochs = 150
+    epochs = 100
     steps = 16
     # validation_steps = 350
     
@@ -292,7 +288,7 @@ def train_cnn(rutas, tam):
     
     historico = modelo_entrenado.history
     
-    write_log(epochs, historico['accuracy'], historico['loss'],test_loss, test_accuracy)
+    write_simply_log(epochs, historico['accuracy'], historico['loss'],test_loss, test_accuracy)
     
     # write_log(epochs, historico['accuracy'] , historico['val_accuracy'],
               # historico['loss'] , historico['val_loss'],
@@ -380,7 +376,7 @@ def show_menu():
 Funcion principal de la red neuronal para crear el control
 '''
 def main():
-    opcion = 1
+    opcion = 2
 
     tamanho = {
         "ancho": 150,
@@ -404,10 +400,10 @@ def main():
 
     elif(opcion == 2):
         # Con cruce
-        imagen = "DJJ_172.JPG" 
+        # imagen = "DJJ_172.JPG" 
         # Sin cruce
         # imagen = "DJJ_1583.JPG"
-        # imagen = "DJJ_408.JPG"
+        imagen = "DJJ_408.JPG"
         
         #Otra imagen
         # imagen = "header.jpg"
