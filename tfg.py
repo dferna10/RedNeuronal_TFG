@@ -4,6 +4,7 @@ Red Neuronal Convolucional (CNN)
 Con set de imagenes cargadas de poco en poco
 '''
 # Importamos las librerias necesarias para crear nuestra red
+import tensorflow as tf
 from keras import backend as K
 from keras import optimizers
 from keras.preprocessing.image import ImageDataGenerator
@@ -20,9 +21,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import time
-
-# from numba import cuda
-# from numba import jit
 
 '''
 *******************************************************************
@@ -197,7 +195,6 @@ def save_cnn(modelo, ruta):
 Funcion principal para el entrenamiento de la red neuronal 
 convoluciona (CNN)
 '''
-# @jit( target='cuda')
 def train_cnn(rutas, tam):
     
     # Generamos las rutas
@@ -223,7 +220,7 @@ def train_cnn(rutas, tam):
     
     
     # Creamos las constantes de nuestra red
-    batch_size = 64
+    batch_size = 5
     lr = 0.0001
     epochs = 100
     steps = 16
@@ -258,7 +255,7 @@ def train_cnn(rutas, tam):
     # Entrenamos nuestra red
     modelo_entrenado = modelo.fit(entrenamiento,
                                   # callbacks = [checkpoints],
-                                  steps_per_epoch = steps, 
+                                  # steps_per_epoch = steps, 
                                   epochs = epochs, 
                                   # validation_data = validacion, 
                                   # validation_steps = validation_steps
@@ -376,7 +373,7 @@ def show_menu():
 Funcion principal de la red neuronal para crear el control
 '''
 def main():
-    opcion = 2
+    opcion = 1
 
     tamanho = {
         "ancho": 150,
@@ -386,12 +383,17 @@ def main():
     if(opcion == 1):
         
         K.clear_session()
+        config = tf.compat.v1.ConfigProto()
+        config.gpu_options.allow_growth = True
+        session = tf.compat.v1.Session(config=config)
+        tf.compat.v1.keras.backend.set_session(session)
+        
         # Ruta de las imagenes sin procesar, de donde podemos extraer los directorios 
         # para obtener las etiquetas
         rutas = {
             'entrenamiento': getImagesPath("TFG/entrenamiento"),
             'validacion': getImagesPath("TFG/validacion"),
-            'test': getImagesPath("TFG/test_2"),
+            'test': getImagesPath("TFG/test"),
             'modelo': getImagesPath("TFG/modelo"),
         }
         
