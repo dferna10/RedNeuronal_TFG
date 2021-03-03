@@ -36,28 +36,28 @@ def createNeuralModel( n_clases, tam):
     modelo = Sequential()
     
     # Capa de entrada
-    modelo.add(Conv2D(32, kernel_size = (3, 3), activation = "relu", padding='same', input_shape = (tam['alto'], tam['ancho'], 3)))
+    modelo.add(Conv2D(32, kernel_size = (3, 3), activation = "relu", padding='same', strides = 2, input_shape = (tam['alto'], tam['ancho'], 3)))
     modelo.add(BatchNormalization())
-    modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2 ))
+    modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2 , padding='same'))
 
     # Capas intermedias 
-    modelo.add(Conv2D(64, kernel_size = (3, 3), activation = "relu"))
+    modelo.add(Conv2D(64, kernel_size = (3, 3), activation = "relu", padding='same', strides = 2))
     modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2))
     
-    modelo.add(Conv2D(128, kernel_size = (3, 3), activation = "relu"))
-    modelo.add(BatchNormalization())
-    modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2 ))
+    # modelo.add(Conv2D(128, kernel_size = (3, 3), activation = "relu"))
+    # modelo.add(BatchNormalization())
+    # modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2 ))
     
-    modelo.add(Conv2D(128, kernel_size = (3, 3),  activation = "relu"))
-    modelo.add(MaxPooling2D((2, 2)))
+    # modelo.add(Conv2D(128, kernel_size = (3, 3),  activation = "relu"))
+    # modelo.add(MaxPooling2D((2, 2)))
     
-    modelo.add(Conv2D(128, kernel_size = (3, 3),  activation = "relu"))
-    modelo.add(MaxPooling2D((2, 2)))
+    # modelo.add(Conv2D(128, kernel_size = (3, 3),  activation = "relu"))
+    # modelo.add(MaxPooling2D((2, 2)))
     
     # Quitamos dimensionalidad a la imagen
     modelo.add(Flatten())
 
-    modelo.add(Dense(1024, activation = "relu"))
+    modelo.add(Dense(256, activation = "relu"))
     # En cada iteracion desactivamos el 50% de las neuronas para darle varios caminos y poder  mejorar
     modelo.add(Dropout(0.5)) 
     
@@ -220,7 +220,7 @@ def train_cnn(rutas, tam):
     
     
     # Creamos las constantes de nuestra red
-    batch_size = 5
+    batch_size =155
     lr = 0.0001
     epochs = 100
     steps = 16
