@@ -220,7 +220,7 @@ def train_cnn(rutas, tam):
     
     
     # Creamos las constantes de nuestra red
-    batch_size =155
+    batch_size =15
     lr = 0.0001
     epochs = 100
     steps = 16
