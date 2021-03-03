@@ -7,6 +7,7 @@ Con set de imagenes cargadas de poco en poco
 import tensorflow as tf
 from keras import backend as K
 from keras import optimizers
+from keras.utils import plot_model 
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.models import load_model # Para cargar el modelo de nuestra red
@@ -228,7 +229,8 @@ def train_cnn(rutas, tam):
     
     # Mostramos un resumen de nuestra red
     modelo.summary()
-    
+    # Capturamos la estructura de nuestra red
+    plot_model(modelo, show_shapes=True, to_file="convolucional.png")
     # Compilamos la red
     modelo.compile(loss = 'categorical_crossentropy', 
                    optimizer = optimizers.Adam(learning_rate = lr), 
@@ -242,9 +244,9 @@ def train_cnn(rutas, tam):
                                                         batch_size = batch_size)
     
     # validacion = datagen.flow_from_directory(directory = ruta_validacion,
-                                             # target_size = (tam['alto'], tam['ancho']),
-                                             # class_mode = 'categorical',
-                                             # batch_size = batch_size)
+                                              # target_size = (tam['alto'], tam['ancho']),
+                                              # class_mode = 'categorical',
+                                              # batch_size = batch_size)
 
     print("\n")
    
@@ -270,10 +272,10 @@ def train_cnn(rutas, tam):
     
     # Cargamos las imágenes de test    
     test = datagen.flow_from_directory(directory = ruta_test,
-                                       shuffle = False,
-                                       target_size = (tam['alto'], tam['ancho']),
-                                       class_mode = 'categorical',
-                                       batch_size = batch_size)
+                                        shuffle = False,
+                                        target_size = (tam['alto'], tam['ancho']),
+                                        class_mode = 'categorical',
+                                        batch_size = batch_size)
     
     # Evaluamos nuestro modelo
     print("\nEvaluamos nuestro modelo")
@@ -287,9 +289,9 @@ def train_cnn(rutas, tam):
     
     write_simply_log(epochs, historico['accuracy'], historico['loss'],test_loss, test_accuracy)
     
-    # write_log(epochs, historico['accuracy'] , historico['val_accuracy'],
-              # historico['loss'] , historico['val_loss'],
-              # test_loss, test_accuracy)
+    write_log(epochs, historico['accuracy'] , historico['val_accuracy'],
+               historico['loss'] , historico['val_loss'],
+               test_loss, test_accuracy)
   
     
   
