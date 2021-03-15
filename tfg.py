@@ -13,7 +13,7 @@ from keras.models import load_model # Para cargar el modelo de nuestra red
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Dropout, Flatten, Dense, BatchNormalization
 from keras.preprocessing.image import load_img, img_to_array
-# from keras.callbacks import ModelCheckpoint #Para coger el mejor resultado de todas las epocas
+from keras.callbacks import ModelCheckpoint #Para coger el mejor resultado de todas las epocas
 
 # Importamos las librerias de actuacion contra el sistema
 import os
@@ -44,20 +44,20 @@ def createNeuralModel( n_clases, tam):
     modelo.add(Conv2D(64, kernel_size = (3, 3), activation = "relu", padding='same', strides = 2))
     modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2))
     
-    # modelo.add(Conv2D(128, kernel_size = (3, 3), activation = "relu"))
-    # modelo.add(BatchNormalization())
-    # modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2 ))
+    modelo.add(Conv2D(128, kernel_size = (3, 3), activation = "relu"))
+    modelo.add(BatchNormalization())
+    modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2 ))
     
     # modelo.add(Conv2D(128, kernel_size = (3, 3),  activation = "relu"))
-    # modelo.add(MaxPooling2D((2, 2)))
+    # modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 1 ))
     
     # modelo.add(Conv2D(128, kernel_size = (3, 3),  activation = "relu"))
-    # modelo.add(MaxPooling2D((2, 2)))
+    # modelo.add(MaxPooling2D(pool_size = (2, 2)))
     
     # Quitamos dimensionalidad a la imagen
     modelo.add(Flatten())
 
-    modelo.add(Dense(256, activation = "relu"))
+    modelo.add(Dense(1024, activation = "relu"))
     # En cada iteracion desactivamos el 50% de las neuronas para darle varios caminos y poder  mejorar
     modelo.add(Dropout(0.5)) 
     
@@ -203,7 +203,7 @@ def train_cnn(rutas, tam):
     ruta_test = rutas['test']
     
     # Numero de clases o etiquetas de nuestra red
-    clases = int(2)
+    clases = int(4)
     
     # Creamos el modelo de nuestra red neuronal
     modelo  = createNeuralModel(clases, tam)
@@ -220,7 +220,7 @@ def train_cnn(rutas, tam):
     
     
     # Creamos las constantes de nuestra red
-    batch_size =15
+    batch_size = 15
     lr = 0.0001
     epochs = 100
     steps = 16
@@ -248,13 +248,17 @@ def train_cnn(rutas, tam):
 
     print("\n")
    
-    # directorio = create_directory(rutas['modelo'])
+    directorio = create_directory(rutas['modelo_temp'])
     #Creamos los checkpoints para que nos coja la mejor iteracion
-    # checkpoints = ModelCheckpoint(filepath = directorio + "mejores_pesos.hdf5", monitor = 'val_accuracy', verbose = 1, save_best_only = True)
+    checkpoints = ModelCheckpoint(filepath = directorio + "mejores_pesos_{epoch:02d}_{accuracy:.2f}.hdf5", 
+                                  monitor = 'accuracy', 
+                                  verbose = 1, 
+                                  save_best_only = True
+                                  )
     
     # Entrenamos nuestra red
     modelo_entrenado = modelo.fit(entrenamiento,
-                                  # callbacks = [checkpoints],
+                                   callbacks = [checkpoints],
                                   # steps_per_epoch = steps, 
                                   epochs = epochs, 
                                   # validation_data = validacion, 
@@ -303,9 +307,11 @@ def train_cnn(rutas, tam):
 Funcion para cargar nuestra red para poder predecir resultados
 '''
 def load_cnn(ruta):
-    modelo_preentrenado = ruta + 'tfg.h5'
-    # pesos_modelo = './' + ruta + '/mejores_pesos.hdf5'
-    pesos_modelo = ruta + 'pesos.h5'
+    modelo_temp = ruta + "/mejores_pesos_95_0.99.hdf5"
+    modelo_preentrenado =  modelo_temp
+    pesos_modelo = modelo_temp
+    # modelo_preentrenado = ruta + 'tfg.h5'
+    # pesos_modelo = ruta + 'pesos.h5'
     
     modelo = None
     
@@ -320,35 +326,48 @@ Funcion para predecir un nuevo elemento
 '''
 def predict_element(rutas, imagen, tam):
     
-    modelo = load_cnn(rutas['modelo'])
+    # modelo = load_cnn(rutas['modelo'])
+    modelo = load_cnn(rutas['modelo_temp'])
     
     if(modelo != None):
-        imagen_test = load_img(rutas['prediccion'] +  imagen, target_size = (tam['alto'], tam['ancho']))
-        imagen_test = img_to_array(imagen_test) 
+        # test_cnn(modelo, rutas, tam, 15)
+        imagen_test_in = load_img(rutas['prediccion'] +  imagen, target_size = (tam['alto'], tam['ancho']))
+        imagen_test = img_to_array(imagen_test_in) 
         # imagen_test = imagen_test / 255.
         imagen_test = np.expand_dims(imagen_test, axis = 0)
         
         print(imagen_test.shape)
+        
         prediccion = modelo.predict(imagen_test)
-  
-        print(prediccion)
-  
         salida = prediccion[0]
   
         print(salida)
   
         etiqueta = np.argmax(salida)
-
-        if etiqueta == 0:
-            print("Predicción: Cruce")
-            
-        elif etiqueta == 1:
-            print("Predicción: Sin cruce")
-            
-        elif etiqueta == 2:
-            print("Predicción: Sin patron")
+        etiqueta_salida = "Sin patron"
         
-        return etiqueta
+        if etiqueta == 0:
+            print("Predicción: Canal")
+            etiqueta_salida = "Canal"
+        elif etiqueta == 1:
+            print("Predicción: Cruce")
+            etiqueta_salida = "Cruce"
+        elif etiqueta == 2:
+            print("Predicción: Mina")
+            etiqueta_salida = "Mina"
+        elif etiqueta == 3:
+            print("Predicción: Sin elemento")
+            etiqueta_salida = "Sin elemento"
+            
+        elif etiqueta == 4:
+            print("Predicción: Sin patron")
+            etiqueta_salida = "Sin patron"
+        
+        print(etiqueta_salida)
+        plt.imshow(imagen_test_in, cmap='gray')
+        plt.title("Clase {}". format(etiqueta_salida))
+        
+        return etiqueta_salida
          
     else:
         return -1
@@ -380,40 +399,44 @@ def main():
         "alto": 150
     }
     
+    
+    # Ruta de las imagenes sin procesar, de donde podemos extraer los directorios 
+    # para obtener las etiquetas
+    rutas = {
+        'entrenamiento': getImagesPath("TFG/entrenamiento"),
+        'validacion': getImagesPath("TFG/validacion"),
+        'test': getImagesPath("TFG/test"),
+        'modelo': getImagesPath("TFG/modelo"),
+        'modelo_temp': getImagesPath("TFG/modelo_temp"),
+        "prediccion":  getImagesPath("TFG/prediccion")
+    }
+    
+    K.clear_session()
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
+    session = tf.compat.v1.Session(config=config)
+    tf.compat.v1.keras.backend.set_session(session)
+    
     if(opcion == 1):
-        
-        K.clear_session()
-        config = tf.compat.v1.ConfigProto()
-        config.gpu_options.allow_growth = True
-        session = tf.compat.v1.Session(config=config)
-        tf.compat.v1.keras.backend.set_session(session)
-        
-        # Ruta de las imagenes sin procesar, de donde podemos extraer los directorios 
-        # para obtener las etiquetas
-        rutas = {
-            'entrenamiento': getImagesPath("TFG/entrenamiento"),
-            'validacion': getImagesPath("TFG/validacion"),
-            'test': getImagesPath("TFG/test"),
-            'modelo': getImagesPath("TFG/modelo"),
-        }
-        
         # Entrenamos nuestra red
         train_cnn(rutas, tamanho) 
 
     elif(opcion == 2):
         # Con cruce
-        # imagen = "DJJ_172.JPG" 
+        imagen = "DJJ_172.JPG" 
         # Sin cruce
-        # imagen = "DJJ_1583.JPG"
+        imagen = "DJJ_1583.JPG"
         imagen = "DJJ_408.JPG"
+        # Mina
+        imagen = "DJJ_861.JPG"
+        
+        # Canal
+        imagen = "DJJ_121.JPG"
+        imagen = "DJJ_140.JPG"
+        
         
         #Otra imagen
         # imagen = "header.jpg"
-        
-        rutas = {
-            'modelo':  getImagesPath("TFG/modelo"),
-            "prediccion":  getImagesPath("TFG/prediccion")
-        }
         
         valor = predict_element(rutas, imagen, tamanho)
         print(valor)
@@ -421,8 +444,8 @@ def main():
         if(valor == -1):
             print("ERROR: No se encuentran los archivos de entrenamiento de la red")
             print("Por favor comuniqueselo al administrador del sistema")
-        
-        # return valor
+
+        return valor
     else:
         print("ERROR: No es una opción válida")
         show_menu()
