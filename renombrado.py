@@ -16,7 +16,7 @@ def getImagesPath(ruta):
 '''
 Función para leer las imagenes que vamos a procesar
 '''
-def readImagesToProcess(images_path, tam):
+def readImagesToProcess(images_path):
     print("Lectura de imagenes de la ruta : " + images_path)
     #Modificar para obtener los datos
     images = []
@@ -33,7 +33,7 @@ def readImagesToProcess(images_path, tam):
                 if re.search("\.(jpg|jpeg|png|bmp|tiff|JPG)$", filename):
                     cant = cant + 1
                     filepath = os.path.join(root, filename)
-                    nuevo_nombre = os.path.join(root, "DJI_" + cant +".JPG")
+                    nuevo_nombre = os.path.join(root, "DJI_SC_" + str(cant) +".JPG")
                     os.rename(filepath, nuevo_nombre)
                     b = "Leyendo..." + str(cant)
                     print (b, end="\r")
@@ -42,4 +42,7 @@ def readImagesToProcess(images_path, tam):
                         prevRoot = root
                         directories.append(root)
                         dircount.append(cant)
-                        cant = 0
+                        # cant = 0
+                        
+
+readImagesToProcess(getImagesPath("TFG/procesadas/Sin cruces auto"))
