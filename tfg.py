@@ -7,12 +7,12 @@ Con set de imagenes cargadas de poco en poco
 import tensorflow as tf
 from keras import backend as K
 from keras import optimizers
-from keras.utils import plot_model 
+from keras.utils import plot_model
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.models import load_model # Para cargar el modelo de nuestra red
 from keras.layers import Conv2D, MaxPooling2D
-from keras.layers import Dropout, Flatten, Dense, BatchNormalization
+from keras.layers import Dropout, Flatten, Dense
 from keras.preprocessing.image import load_img, img_to_array
 from keras.callbacks import ModelCheckpoint #Para coger el mejor resultado de todas las epocas
 
@@ -38,7 +38,7 @@ def createNeuralModel( n_clases, tam):
     
     # Capa de entrada
     modelo.add(Conv2D(32, kernel_size = (3, 3), activation = "relu", padding='same', strides = 2, input_shape = (tam['alto'], tam['ancho'], 3)))
-    modelo.add(BatchNormalization())
+    # modelo.add(BatchNormalization())
     modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2 , padding='same'))
 
     # Capas intermedias 
@@ -46,14 +46,9 @@ def createNeuralModel( n_clases, tam):
     modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2))
     
     modelo.add(Conv2D(128, kernel_size = (3, 3), activation = "relu"))
-    modelo.add(BatchNormalization())
+    # modelo.add(BatchNormalization())
     modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 2 ))
-    
-    # modelo.add(Conv2D(128, kernel_size = (3, 3),  activation = "relu"))
-    # modelo.add(MaxPooling2D(pool_size = (2, 2), strides = 1 ))
-    
-    # modelo.add(Conv2D(128, kernel_size = (3, 3),  activation = "relu"))
-    # modelo.add(MaxPooling2D(pool_size = (2, 2)))
+
     
     # Quitamos dimensionalidad a la imagen
     modelo.add(Flatten())
@@ -200,15 +195,8 @@ def train_cnn(rutas, tam):
     
     # Generamos las rutas
     ruta_entrenamiento = rutas['entrenamiento']
-    # ruta_validacion = rutas['validacion']
     ruta_test = rutas['test']
-    
-    # Numero de clases o etiquetas de nuestra red
-    clases = int(4)
-    
-    # Creamos el modelo de nuestra red neuronal
-    modelo  = createNeuralModel(clases, tam)
-    
+
     # Generador de imagenes para que se carguen cuando se necesiten
     entrena_datagen = ImageDataGenerator(
         rescale = 1. / 255,
@@ -219,22 +207,10 @@ def train_cnn(rutas, tam):
     
     datagen = ImageDataGenerator( rescale = 1. / 255)
     
-    
     # Creamos las constantes de nuestra red
-    batch_size = 15
+    batch_size = 40
     lr = 0.0001
-    epochs = 100
-    steps = 16
-    # validation_steps = 350
-    
-    # Mostramos un resumen de nuestra red
-    modelo.summary()
-    # Capturamos la estructura de nuestra red
-    plot_model(modelo, show_shapes=True, to_file="convolucional.png")
-    # Compilamos la red
-    modelo.compile(loss = 'categorical_crossentropy', 
-                   optimizer = optimizers.Adam(learning_rate = lr), 
-                   metrics = ['accuracy'])
+    epochs = 1000
     
     print("\n")
     # Creamos los sets de entrenamiento, validacion
@@ -242,13 +218,22 @@ def train_cnn(rutas, tam):
                                                         target_size = (tam['alto'], tam['ancho']),
                                                         class_mode = 'categorical',
                                                         batch_size = batch_size)
-    
-    # validacion = datagen.flow_from_directory(directory = ruta_validacion,
-                                              # target_size = (tam['alto'], tam['ancho']),
-                                              # class_mode = 'categorical',
-                                              # batch_size = batch_size)
 
     print("\n")
+    
+    # Numero de clases o etiquetas de nuestra red
+    clases = len(dict(entrenamiento.class_indices))
+    
+    # Creamos el modelo de nuestra red neuronal
+    modelo  = createNeuralModel(clases, tam)
+    
+    # Mostramos un resumen de nuestra red
+    modelo.summary()
+    
+    # Compilamos la red
+    modelo.compile(loss = 'categorical_crossentropy', 
+                   optimizer = optimizers.Adam(learning_rate = lr), 
+                   metrics = ['accuracy'])
    
     directorio = create_directory(rutas['modelo_temp'])
     #Creamos los checkpoints para que nos coja la mejor iteracion
@@ -260,11 +245,8 @@ def train_cnn(rutas, tam):
     
     # Entrenamos nuestra red
     modelo_entrenado = modelo.fit(entrenamiento,
-                                   callbacks = [checkpoints],
-                                  # steps_per_epoch = steps, 
+                                  callbacks = [checkpoints],
                                   epochs = epochs, 
-                                  # validation_data = validacion, 
-                                  # validation_steps = validation_steps
                                   )
     
     print("\nEstadisticas de entrenamiento")
@@ -309,7 +291,7 @@ def train_cnn(rutas, tam):
 Funcion para cargar nuestra red para poder predecir resultados
 '''
 def load_cnn(ruta):
-    modelo_temp = ruta + "/mejores_pesos_95_0.99.hdf5"
+    modelo_temp = ruta + "/mejores_pesos_981_1.00.hdf5"
     modelo_preentrenado =  modelo_temp
     pesos_modelo = modelo_temp
     # modelo_preentrenado = ruta + 'tfg.h5'
@@ -328,7 +310,7 @@ Funcion para predecir un nuevo elemento
 '''
 def predict_element(rutas, imagen, tam):
     
-    # modelo = load_cnn(rutas['modelo'])
+    modelo = load_cnn(rutas['modelo'])
     modelo = load_cnn(rutas['modelo_temp'])
     
     if(modelo != None):
@@ -381,6 +363,12 @@ def predict_element(rutas, imagen, tam):
 '''
 
 '''
+Funcion para guardar la red neuronal como una imagen
+'''
+def captureModelImage(model):
+    plot_model(model, show_shapes=True, to_file="modelo_tfg.png")
+
+'''
 Funcion para imprimir el menu de nuestra red neuronal
 '''
 def show_menu():
@@ -394,7 +382,7 @@ def show_menu():
 Funcion principal de la red neuronal para crear el control
 '''
 def main():
-    opcion = 1
+    opcion = 2
 
     tamanho = {
         "ancho": 150,
@@ -405,9 +393,8 @@ def main():
     # Ruta de las imagenes sin procesar, de donde podemos extraer los directorios 
     # para obtener las etiquetas
     rutas = {
-        'entrenamiento': getImagesPath("TFG/entrenamiento"),
-        'validacion': getImagesPath("TFG/validacion"),
-        'test': getImagesPath("TFG/test"),
+        'entrenamiento': getImagesPath("TFG/procesadas/entrenamiento"),
+        'test': getImagesPath("TFG/procesadas/test"),
         'modelo': getImagesPath("TFG/modelo"),
         'modelo_temp': getImagesPath("TFG/modelo_temp"),
         "prediccion":  getImagesPath("TFG/prediccion")
@@ -427,14 +414,14 @@ def main():
         # Con cruce
         imagen = "DJJ_172.JPG" 
         # Sin cruce
-        imagen = "DJJ_1583.JPG"
-        imagen = "DJJ_408.JPG"
+        # imagen = "DJJ_1583.JPG"
+        # imagen = "DJJ_408.JPG"
         # Mina
-        imagen = "DJJ_861.JPG"
+        # imagen = "DJJ_861.JPG"
         
         # Canal
-        imagen = "DJJ_121.JPG"
-        imagen = "DJJ_140.JPG"
+        # imagen = "DJJ_121.JPG"
+        # imagen = "DJJ_140.JPG"
         
         
         #Otra imagen
@@ -448,11 +435,16 @@ def main():
             print("Por favor comuniqueselo al administrador del sistema")
 
         return valor
+    elif opcion == 3:
+        modelo = createNeuralModel(4, tamanho)
+        captureModelImage(modelo)
+        
     else:
         print("ERROR: No es una opción válida")
         show_menu()
         return -1
 
+#Para ver las GPU o dispositivos que tenemos
 # import tensorflow as tf
 # # print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 
@@ -461,10 +453,4 @@ def main():
 # if __name__=='__main__':
 main()  
         
-#Para ver las GPU o dispositivos que tenemos
-# import tensorflow as tf
-# dispositivos = tf.config.experimental.list_physical_devices('GPU')
-
-# print("Numero de GPU " +str(len(dispositivos)))
-# from tensorflow.python.client import device_lib
-# print(device_lib.list_local_devices())
+# modelo = createNeuralModel(4, {"ancho": 150,"alto": 150})
