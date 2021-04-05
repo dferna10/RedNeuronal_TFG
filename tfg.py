@@ -96,34 +96,6 @@ def create_directory(ruta):
 '''
 
 '''
-Funcion para obtener los datos estadisticos del entrenamiento de nuestra red
-para asi saber donde mejorar
-Acurracy, loss
-'''
-def get_stats(modelo_entrenado):
-    accuracy = modelo_entrenado.history['accuracy']
-    val_accuracy = modelo_entrenado.history['val_accuracy']
-    loss = modelo_entrenado.history['loss']
-    val_loss = modelo_entrenado.history['val_loss']
-    
-    epochs = range(len(accuracy))
-    plt.show()
-    
-    print("\n")
-    
-    plt.plot(epochs, accuracy, color = 'b', label = 'Accuracy entrenamiento')
-    plt.plot(epochs, val_accuracy, color = 'r', label = 'Accuracy validacion')
-    plt.title('Accuracy entrenamiento y validacion')
-    plt.legend()
-    plt.figure()
-    plt.plot(epochs, loss, color = "b", label='Loss entrenamiento')
-    plt.plot(epochs, val_loss, color = 'r', label='Loss validacion')
-    plt.title('Loss entrenamiento y validacion')
-    plt.legend()
-    plt.show()
-
-
-'''
 Funcion para imprimir la grafica cuando solo entrenamos sin validacion
 '''
 def getSimplyStats(modelo_entrenado):
@@ -157,23 +129,6 @@ def write_simply_log(epochs, accuracy,loss, loss_test, accuracy_test):
     f.write(cadena)
     f.close()
 
-'''
-Funcion para registrar los resultados obtenidos al entrenar nuestra red
-'''
-def write_log(epochs, accuracy, accuracy_validation, loss, loss_validacion, loss_test, accuracy_test):
-    actual = time.strftime("%c")
-    f = open ("train_log.txt", "a")
-    cadena = "\n" + actual
-    cadena = cadena + "\nNúmero de epocas: " + str(epochs)
-    cadena = cadena + "\nAccuracy: " + str(list(accuracy))
-    cadena = cadena + "\nAccuracy validacion : " + str(list(accuracy_validation))
-    cadena = cadena + "\nLoss : " + str(list(loss))
-    cadena = cadena + "\nLoss validacion : " + str(list(loss_validacion))
-    cadena = cadena + "\nAccuracy Test : " + str(accuracy_test)
-    cadena = cadena + "\nLoss test : " + str(loss_test)
-    cadena = cadena + "\n"
-    f.write(cadena)
-    f.close()
 
 '''
 Funcion para guardar la red convolucional ya entrenada
@@ -251,7 +206,6 @@ def train_cnn(rutas, tam):
     
     print("\nEstadisticas de entrenamiento")
     getSimplyStats(modelo_entrenado)
-    # get_stats(modelo_entrenado)
     
     # Guaradamos el modelo de nuestra red ya entrenada
     save_cnn(modelo, rutas["modelo"])
@@ -274,10 +228,6 @@ def train_cnn(rutas, tam):
     historico = modelo_entrenado.history
     
     write_simply_log(epochs, historico['accuracy'], historico['loss'],test_loss, test_accuracy)
-    
-    write_log(epochs, historico['accuracy'] , historico['val_accuracy'],
-               historico['loss'] , historico['val_loss'],
-               test_loss, test_accuracy)
   
     
   
@@ -314,10 +264,9 @@ def predict_element(rutas, imagen, tam):
     modelo = load_cnn(rutas['modelo_temp'])
     
     if(modelo != None):
-        # test_cnn(modelo, rutas, tam, 15)
         imagen_test_in = load_img(rutas['prediccion'] +  imagen, target_size = (tam['alto'], tam['ancho']))
         imagen_test = img_to_array(imagen_test_in) 
-        # imagen_test = imagen_test / 255.
+        imagen_test = imagen_test / 255.
         imagen_test = np.expand_dims(imagen_test, axis = 0)
         
         print(imagen_test.shape)
@@ -453,4 +402,3 @@ def main():
 # if __name__=='__main__':
 main()  
         
-# modelo = createNeuralModel(4, {"ancho": 150,"alto": 150})
