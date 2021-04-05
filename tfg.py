@@ -219,7 +219,6 @@ def train_cnn(rutas, tam):
                                                         class_mode = 'categorical',
                                                         batch_size = batch_size)
 
-
     print("\n")
     
     # Numero de clases o etiquetas de nuestra red
@@ -259,10 +258,10 @@ def train_cnn(rutas, tam):
     
     # Cargamos las imágenes de test    
     test = datagen.flow_from_directory(directory = ruta_test,
-                                       shuffle = False,
-                                       target_size = (tam['alto'], tam['ancho']),
-                                       class_mode = 'categorical',
-                                       batch_size = batch_size)
+                                        shuffle = False,
+                                        target_size = (tam['alto'], tam['ancho']),
+                                        class_mode = 'categorical',
+                                        batch_size = batch_size)
     
     # Evaluamos nuestro modelo
     print("\nEvaluamos nuestro modelo")
@@ -276,9 +275,9 @@ def train_cnn(rutas, tam):
     
     write_simply_log(epochs, historico['accuracy'], historico['loss'],test_loss, test_accuracy)
     
-    # write_log(epochs, historico['accuracy'] , historico['val_accuracy'],
-              # historico['loss'] , historico['val_loss'],
-              # test_loss, test_accuracy)
+    write_log(epochs, historico['accuracy'] , historico['val_accuracy'],
+               historico['loss'] , historico['val_loss'],
+               test_loss, test_accuracy)
   
     
   

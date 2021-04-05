@@ -42,7 +42,4 @@ def readImagesToProcess(images_path):
                         prevRoot = root
                         directories.append(root)
                         dircount.append(cant)
-                        # cant = 0
-                        
-
 readImagesToProcess(getImagesPath("TFG/procesadas/Sin cruces auto"))
