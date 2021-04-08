@@ -273,7 +273,12 @@ def predict_element(rutas, imagen, tam):
         
         prediccion = modelo.predict(imagen_test)
         salida = prediccion[0]
-  
+        
+        salida_2 =[]
+        for i in range(0, len(salida),1):
+            salida_2.append(round(salida[i], 3))
+            
+        salida = salida_2
         print(salida)
   
         etiqueta = np.argmax(salida)
@@ -364,10 +369,11 @@ def main():
         imagen = "DJJ_172.JPG" 
         # Sin cruce
         # imagen = "DJJ_1583.JPG"
-        # imagen = "DJJ_408.JPG"
+        imagen = "DJJ_408.JPG"
         # Mina
-        # imagen = "DJJ_861.JPG"
-        
+        imagen = "DJJ_861.JPG"
+        imagen = "MinaCamino.PNG"
+        imagen = "MC_2.PNG"
         # Canal
         # imagen = "DJJ_121.JPG"
         # imagen = "DJJ_140.JPG"
