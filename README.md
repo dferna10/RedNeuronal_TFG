@@ -154,4 +154,4 @@ _Mención y ayuda para recordar los conocimientos y sitios donde de ha encontrad
 * [Libreria Keras](https://keras.io/api/) - Información sobre la librería
 
 ## Licencia
-**[MIT](license.txt)** Licencia del proyecto
+**[MIT](https://github.com/dferna10/RedNeuronal_TFG/blob/main/licence.txt)** Licencia del proyecto
