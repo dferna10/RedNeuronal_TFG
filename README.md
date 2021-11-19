@@ -152,3 +152,6 @@ _Mención y ayuda para recordar los conocimientos y sitios donde de ha encontrad
 
 ## Documentación
 * [Libreria Keras](https://keras.io/api/) - Información sobre la librería
+
+## Licencia
+**[MIT](license.txt)** Licencia del proyecto
